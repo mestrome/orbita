@@ -6,75 +6,66 @@ from cartesian_plane import CartesianPlane
 
 from vector import Vector3d
 
-import pygame
 from math import *
 
 
 class Circle:
+    def __init__(self):
+        self.vectors = []
+        self.var = 0
 
-    # FUNÇÃO QUALQUER PARA SER REPRESENTADA
-    def f(self, x):
-        return x*x
-
-    def g(self, x,y, angle):
-        return ( (y * cos((angle/180)*pi)) - (x * sin((angle/180)*pi)), (y * sin((angle/180)*pi)) + (x * cos((angle/180)*pi)))
-
-
-    def parabola(self):
-        tam = 10
-        dx = 0.1
-
-
-        glBegin(GL_LINES)
-        glColor3f(0,1,0.7)
-
-        x = -tam
-        while -tam <= x <= tam:
-
-            glVertex3f(x, self.f(x), 0)
-            glVertex3f(x+dx, self.f(x+dx), 0)
-
-            x += dx
-            
-        glEnd()
-
-    def circle(self, angle_z=0):
-        angle = 0
-        dz = 10
-        rain = 5
-
-        glBegin(GL_LINES)
-        glColor3f(0,1,0.7)
-
+    def show(self, radius, stacks, sectors):
         
-        while 0 <= angle < 360:
+        for i in range(0,stacks+1):
+            phi = -pi/2 + i*pi/stacks
+            temp = radius*cos(phi)
+            y = radius*sin(phi)
+            for j in range(0,sectors+1):
+                theta = j*2*pi/sectors
+                x = temp*sin(theta)
+                z = temp*cos(theta)
 
-            glVertex3f(self.g(0,rain,angle)[0], self.g(0,rain,angle)[1], angle_z)
-            glVertex3f(self.g(0,rain,angle+dz)[0], self.g(0,rain,angle+dz)[1], angle_z)
-
-            angle += dz
-            
-        glEnd()
-
-    def esfera(self):
-        angle = 0
-        dy = 10
-
-        while 0 <= angle < 360:
-            self.circle(self.g(0,5,angle)[1])
-            angle += dy
-        
-
-        
+                self.vectors.append(Vector3d(x,y,z))
+                
 
     def update(self):
-        self.circle()
-        self.esfera()
+        self.show(10,5,10)
+
+        glMatrixMode(GL_MODELVIEW)
+        glEnable(GL_DEPTH_TEST)
+        glLoadIdentity()
+        glTranslatef(0,0,-100)
+        self.var += 1
+        
+
+        glPushMatrix()
+        
+        
+        glColor3fv((1,0,0))
+        glPointSize(5)
+        glBegin(GL_POINTS)
+        for point in self.vectors:
+            if point.z > 0:
+                glVertex3fv(point.get())
+        glEnd()
+        
+        v = []
+        for point in self.vectors:
+            vt = Vector3d(point.x, point.y, point.z)
+            vt.rotate(Vector3d(self.var,0,0), Vector3d(0,0,0))
+            v.append(vt)
+        self.vectors = v
+        
+        self.var += 90
+
+        
+        glPopMatrix()
+
+        
 
 
 if __name__=="__main__":
         from cartesian_plane import CartesianPlane
         app = App()
-        app.render.append(CartesianPlane())
         app.render.append(Circle())
         app.run()
